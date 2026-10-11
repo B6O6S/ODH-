@@ -1,5 +1,15 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
+
+local allowedNames = {
+    ["3r_q5"] = true,
+    ["5_6ry"] = true
+}
+
+if not allowedNames[localPlayer.Name] then
+    return
+end
 
 local POS_KILL = Vector3.new(216, 100, 339)
 local POS_KICK = Vector3.new(283, 191, 333)
@@ -29,9 +39,7 @@ local triggeredKill = false
 local triggeredKick = false
 local triggeredLag = false
 
-while true do
-    task.wait(0.5)
-    
+RunService.Heartbeat:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
@@ -73,4 +81,4 @@ while true do
             
         end
     end
-end
+end)
