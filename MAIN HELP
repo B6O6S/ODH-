@@ -2,12 +2,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
-local allowedNames = {
-    ["3r_q5"] = true,
-    ["5_6ry"] = true
-}
-
-if not allowedNames[localPlayer.Name] then
+if localPlayer.Name ~= "3r_q5" and localPlayer.Name ~= "5_6ry" then
     return
 end
 
@@ -35,50 +30,51 @@ createVisualZone(POS_KILL, "Bright red", "VisualKillZone")
 createVisualZone(POS_KICK, "Bright blue", "VisualKickZone")
 createVisualZone(POS_LAG, "Bright yellow", "VisualLagZone")
 
-local triggeredKill = false
-local triggeredKick = false
-local triggeredLag = false
+local lastLagTick = 0
+local lagEffectEndTime = 0
 
 RunService.Heartbeat:Connect(function()
+    local currentTime = os.clock()
+    local inKillZone = false
+    local inLagZone = false
+    
     for _, player in ipairs(Players:GetPlayers()) do
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
-            local hrp = character.HumanoidRootPart
-            local pos = hrp.Position
+            local pos = character.HumanoidRootPart.Position
             
             if (pos - POS_KILL).Magnitude <= RADIUS then
-                if not triggeredKill then
-                    triggeredKill = true
-                    local localChar = localPlayer.Character
-                    if localChar and localChar:FindFirstChildOfClass("Humanoid") then
-                        localChar:FindFirstChildOfClass("Humanoid").Health = 0
-                    end
-                    task.delay(5, function() triggeredKill = false end)
-                end
+                inKillZone = true
             end
             
             if (pos - POS_KICK).Magnitude <= RADIUS then
-                if not triggeredKick then
-                    triggeredKick = true
-                    game:Shutdown()
-                end
+                game:Shutdown()
             end
             
             if (pos - POS_LAG).Magnitude <= RADIUS then
-                if not triggeredLag then
-                    triggeredLag = true
-                    if setfpscap then
-                        local randomFps = math.random(4, 12)
-                        setfpscap(randomFps)
-                        
-                        task.delay(4, function()
-                            setfpscap(0)
-                        end)
-                    end
-                    task.delay(8, function() triggeredLag = false end)
-                end
+                inLagZone = true
+                lagEffectEndTime = currentTime + 4
             end
-            
+        end
+    end
+    
+    if inKillZone then
+        local localChar = localPlayer.Character
+        if localChar and localChar:FindFirstChildOfClass("Humanoid") then
+            localChar:FindFirstChildOfClass("Humanoid").Health = 0
+        end
+    end
+    
+    if currentTime < lagEffectEndTime then
+        if currentTime - lastLagTick >= 0.01 then
+            lastLagTick = currentTime
+            if setfpscap then
+                setfpscap(math.random(4, 12))
+            end
+        end
+    else
+        if setfpscap then
+            setfpscap(0)
         end
     end
 end)
