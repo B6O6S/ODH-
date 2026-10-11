@@ -1,0 +1,76 @@
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local POS_KILL = Vector3.new(216, 100, 339)
+local POS_KICK = Vector3.new(283, 191, 333)
+local POS_LAG  = Vector3.new(172, 138, 722)
+
+local RADIUS = 20
+local CUBE_SIZE = Vector3.new(RADIUS * 2, RADIUS * 2, RADIUS * 2)
+
+local function createVisualZone(position, color, name)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Size = CUBE_SIZE
+    part.Position = position
+    part.Anchored = true
+    part.CanCollide = false
+    part.Transparency = 1
+    part.BrickColor = BrickColor.new(color)
+    part.Material = Enum.Material.Neon
+    part.Parent = workspace
+end
+
+createVisualZone(POS_KILL, "Bright red", "VisualKillZone")
+createVisualZone(POS_KICK, "Bright blue", "VisualKickZone")
+createVisualZone(POS_LAG, "Bright yellow", "VisualLagZone")
+
+local triggeredKill = false
+local triggeredKick = false
+local triggeredLag = false
+
+while true do
+    task.wait(0.5)
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character.HumanoidRootPart
+            local pos = hrp.Position
+            
+            if (pos - POS_KILL).Magnitude <= RADIUS then
+                if not triggeredKill then
+                    triggeredKill = true
+                    local localChar = localPlayer.Character
+                    if localChar and localChar:FindFirstChildOfClass("Humanoid") then
+                        localChar:FindFirstChildOfClass("Humanoid").Health = 0
+                    end
+                    task.delay(5, function() triggeredKill = false end)
+                end
+            end
+            
+            if (pos - POS_KICK).Magnitude <= RADIUS then
+                if not triggeredKick then
+                    triggeredKick = true
+                    game:Shutdown()
+                end
+            end
+            
+            if (pos - POS_LAG).Magnitude <= RADIUS then
+                if not triggeredLag then
+                    triggeredLag = true
+                    if setfpscap then
+                        local randomFps = math.random(4, 12)
+                        setfpscap(randomFps)
+                        
+                        task.delay(4, function()
+                            setfpscap(0)
+                        end)
+                    end
+                    task.delay(8, function() triggeredLag = false end)
+                end
+            end
+            
+        end
+    end
+end
